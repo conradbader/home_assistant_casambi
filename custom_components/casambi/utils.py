@@ -9,9 +9,11 @@ import asyncio
 from datetime import timedelta
 
 import aiocasambi
+import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers import aiohttp_client
 
@@ -102,17 +104,13 @@ async def async_create_controller(
         _LOGGER.error("Connected to casambi but couldn't log in")
         return None
 
-    except asyncio.TimeoutError:
-        err_msg = "Error connecting to the Casambi, "
-        err_msg += "caught asyncio.TimeoutError"
-        _LOGGER.error(err_msg)
-        return None
-
-    except aiocasambi.AiocasambiException as err:
-        err_msg = "Unknown Casambi communication error occurred! "
-        err_msg += f"err: {err}"
-        _LOGGER.error(err_msg)
-        return None
+    except (
+        asyncio.TimeoutError,
+        aiohttp.ClientError,
+        aiocasambi.AiocasambiException,
+    ) as err:
+        # Usually temporary, so let Home Assistant retry the setup by itself.
+        raise ConfigEntryNotReady(f"Could not reach Casambi: {err}") from err
 
     # Sleep so we get some websocket messages,
     # oem and other settings needs to be set

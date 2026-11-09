@@ -6,6 +6,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.issue_registry import async_create_issue, IssueSeverity
 
 from .utils import async_create_controller, async_create_coordinator
@@ -55,12 +56,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 await async_create_controller(hass, config)
             )
 
-    except asyncio.TimeoutError:
-        err_msg = "Error connecting to the Casambi, "
-        err_msg += "caught asyncio.TimeoutError"
-        _LOGGER.error(err_msg)
+    except asyncio.TimeoutError as err:
         hass.data[DOMAIN].pop(CONF_CONTROLLER, None)
-        return False
+        raise ConfigEntryNotReady("Timed out connecting to Casambi") from err
+
+    except ConfigEntryNotReady:
+        hass.data[DOMAIN].pop(CONF_CONTROLLER, None)
+        raise
 
     if not controller:
         hass.data[DOMAIN].pop(CONF_CONTROLLER, None)
