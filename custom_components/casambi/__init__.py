@@ -15,6 +15,7 @@ from .const import DOMAIN, CONF_CONTROLLER, CONF_COORDINATOR, MAX_START_UP_TIME
 _LOGGER = logging.getLogger(__name__)
 _PLATFORM_LIGHT: list[Platform] = [Platform.LIGHT]
 _PLATFORM_BINARY_SENSOR: list[Platform] = [Platform.BINARY_SENSOR]
+_PLATFORM_NUMBER: list[Platform] = [Platform.NUMBER]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -86,6 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         config_entry, _PLATFORM_BINARY_SENSOR
     )
 
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, _PLATFORM_NUMBER
+    )
+
     return True
 
 
@@ -108,6 +113,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
                 ),
                 hass.config_entries.async_forward_entry_unload(
                     config_entry, Platform.BINARY_SENSOR
+                ),
+                hass.config_entries.async_forward_entry_unload(
+                    config_entry, Platform.NUMBER
                 ),
             ]
         )
