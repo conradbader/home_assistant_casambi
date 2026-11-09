@@ -1,100 +1,97 @@
-# Home assistant Casambi Lights support
+# Casambi for Home Assistant
 
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/hellqvio86/home_assistant_casambi)
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
-![GitHub issues](https://img.shields.io/github/issues-raw/hellqvio86/home_assistant_casambi)
-![GitHub last commit](https://img.shields.io/github/last-commit/hellqvio86/aiocasambi)
-![GitHub](https://img.shields.io/github/license/hellqvio86/home_assistant_casambi)
+A custom integration that connects [Casambi](https://casambi.com/) lights to [Home Assistant](https://www.home-assistant.io/) through the Casambi Cloud API.
 
-## Deprecation
+This is a maintained fork of [hellqvio86/home_assistant_casambi](https://github.com/hellqvio86/home_assistant_casambi), which was archived after Casambi stopped issuing API keys to end users. The fork keeps the integration working on current Home Assistant releases.
 
-> [!WARNING]
-> Casambi has stopped handing out API keys to end users, its highly encouraged to consider the bluetooth custom component for Casambi [casambi-bt-hass](https://github.com/lkempf/casambi-bt-hass) if not on legacy firmware.
+## Is this the right integration for you?
 
-This is project is a custom component for supporting Casambi Lights in [Home Assistant](https://www.home-assistant.io/). The component integrates with casambi through its [Cloud API](https://developer.casambi.com/). All lights will be automatically discovered. The light state is sent to Home Assistant mainly by websocket, but this integration also polls Casambis REST API periodically. Home Assistant can be integrated with [Google Home](https://www.home-assistant.io/integrations/google_assistant/), [Amazon Alexa](https://www.home-assistant.io/integrations/alexa/) and much more.
+**You need an existing Casambi API key.** Casambi no longer issues new ones, so this integration is mainly useful if you already have a key, for example from the [Homebridge plugin](https://github.com/awahlig/homebridge-casambi).
 
-It uses a separate library (also written by me), link to library project:
-https://github.com/olofhellqvist/aiocasambi
+Without a key, look at [casambi-bt-hass](https://github.com/lkempf/casambi-bt-hass), which talks to the lights over Bluetooth.
 
-## Not supported devices
+## What is different from the original
 
-| OEM   | Fixture Model  | Comment                                                                                                                                                                                                                 |
-| ----- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| OLIGO | GRACE PL HA TW | Integration do not support two dimmers, hardware is needed in order to develop support for controls': [{'name': 'dimmer0', 'type': 'Dimmer', 'value': 0.0}, {'name': 'dimmer1', 'type': 'Dimmer', 'value': 0.0}         |
-| OLIGO | CURVED         | Support for light with two dimmers (up and down light) is currently limited. Both dimmers are controlled simultaneously with one light entity in Home Assistant, no separate control implemented as of today (see #54). |
+- Works on Home Assistant 2026.11 (tested version)
+- Logs in with the network password only, so no account password is needed
+- The setup form reports rejected credentials instead of accepting them
+- Adds a **Leuchtrichtung** slider for lights with up/down control
+- Fixes the rejected color modes and several setup and reconnect errors
 
-## Supported devices
+## Features
 
-### Lights
+Lights are discovered automatically. Changes arrive by websocket, and the integration also polls the Casambi cloud once a minute.
 
-#### Supported modes
+| Entity | Purpose |
+| --- | --- |
+| Light | On/off, brightness, color temperature, RGB and RGBW, depending on the fixture |
+| Number `Leuchtrichtung` | Up/down light direction: 100 % is fully up, 0 % is fully down |
+| Binary sensor `Status` | Whether the fixture is online |
 
-These modes are implemented:
+### Setting the direction in automations
 
--   on/off
--   brightness
--   color temperature
--   rgb
--   rgbw
+Use the slider entity with `number.set_value`:
 
-### Distribution/Vertical
-
-Distribution/Vertical is supported by using **casambi.light_turn_on** service, see screenshot below:
-![Screenshot](/misc/docs/images/screenshot_casambi_turn_on_light_service.png)
-
-## Usage
-
-### Prerequisite
-
--   [Home Assistant](https://www.home-assistant.io/)
--   Request developer api key from Casambi: https://developer.casambi.com/
--   Setup a site: https://support.casambi.com/support/solutions/articles/12000041325-how-to-create-a-site
--   Running Casambi app with gateway enabled: https://support.casambi.com/support/solutions/articles/12000017046-how-to-enable-a-gateway-for-a-network-
-
-### Installation
-
-#### Installation via HACS (recommended)
-
-1. Setup HACS https://hacs.xyz/
-2. HACS -> Integrations -> `+` -> Casambi -> Download
-3. Restart home assistant (you have installed a custom plugin).
-4. Go to Settings -> "Devices & Services" -> Add integration -> Casambi
-5. Follow the setup flow.
-
-#### "Manual" Installation
-
-Just place the directory "casambi" in to your 'custom_components' folder.
-
-### Troubleshot
-
-#### Enable logging in your configuration.yml
-
-Set logging to debug mode for integration and [aiocasambi](https://github.com/hellqvio86/aiocasambi) (library that the integration uses):
-
+```yaml
+action: number.set_value
+target:
+  entity_id: number.kitchen_light_leuchtrichtung
+data:
+  value: 100
 ```
+
+The older `casambi.light_turn_on` service still works. It sets brightness and `distribution` together, and counts the other way: `0` is fully up and `255` is fully down.
+
+### Not supported
+
+| OEM | Fixture model | Limitation |
+| --- | --- | --- |
+| OLIGO | GRACE PL HA TW | Fixtures with two dimmers are not supported |
+| OLIGO | CURVED | Both dimmers (up and down light) are controlled together by one light entity |
+
+## Requirements
+
+- Home Assistant 2026.11 or newer
+- A Casambi API key
+- A Casambi network with an [active gateway](https://support.casambi.com/support/solutions/articles/12000017046-how-to-enable-a-gateway-for-a-network-), which is usually a phone or tablet running the Casambi app
+- A GitHub account connected to the Home Assistant Marketplace
+
+## Installation
+
+1. Go to **Settings > Marketplace > Add from link**.
+2. Enter `conradbader/home_assistant_casambi` and select **Add**. If asked for the type, choose **Integration**.
+3. Open the repository and install it.
+4. Restart Home Assistant and reload the browser page.
+5. Go to **Settings > Devices & services > Add integration > Casambi**.
+6. Enter the API key, the email and the network password. If you use the Homebridge plugin in network login mode, these are the same values.
+
+### Updating
+
+Open the integration in **Settings > Marketplace**, install the update and restart Home Assistant.
+
+## Troubleshooting
+
+To get detailed logs, add this to `configuration.yaml`:
+
+```yaml
 logger:
   default: info
   logs:
-    homeassistant.components.casambi: debug
     custom_components.casambi: debug
     aiocasambi: debug
 ```
 
-## Other Casambi projects
+> [!WARNING]
+> With debug logging on, the `aiocasambi` library writes the API key and network password to the log. Turn it off again afterwards, and remove those values before sharing a log.
 
--   https://github.com/hellqvio86/aiocasambi - The Asynchronous I/O Casambi library that this project uses
--   https://github.com/hellqvio86/casambi - Casambi python library
--   https://github.com/awahlig/homebridge-casambi Homebridge plugin for Casambi
--   https://github.com/lkempf/casambi-bt-hass Home Assistant integration for Casambi with Bluetooth support
+## Related projects
 
-## Authors
+- [aiocasambi](https://github.com/hellqvio86/aiocasambi): the library this integration uses
+- [homebridge-casambi](https://github.com/awahlig/homebridge-casambi): Homebridge plugin for Casambi
+- [casambi-bt-hass](https://github.com/lkempf/casambi-bt-hass): Home Assistant integration using Bluetooth
 
--   **Olof Hellqvist** - _Initial work_
+## Credits and license
 
-## License
+Originally written by Olof Hellqvist. Licensed under the MIT License, see [LICENSE](LICENSE).
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Disclaimer
-
-This custom component is neither affiliated with nor endorsed by Casambi.
+This integration is neither affiliated with nor endorsed by Casambi.

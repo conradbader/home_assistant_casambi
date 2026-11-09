@@ -31,12 +31,13 @@ class CasambiDistributionNumber(NumberEntity, CasambiEntity):
 
     @property
     def native_value(self) -> int:
-        """Return the current direction in percent."""
-        return round(self.unit.distribution * 100)
+        """Return the share of light going up, in percent."""
+        return round((1 - self.unit.distribution) * 100)
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set the direction in percent."""
-        await self.unit.set_unit_distribution(distribution=round(value / 100, 2))
+        """Set the share of light going up, in percent."""
+        # Casambi counts the other way: 0 is fully up and 1 is fully down.
+        await self.unit.set_unit_distribution(distribution=round(1 - value / 100, 2))
         self.schedule_state_update()
 
     def update_state(self):
