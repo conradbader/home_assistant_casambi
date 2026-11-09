@@ -3,31 +3,18 @@
   "config": {
     "step": {
       "user": {
-        "title": "Casambi",
-        "description": "[Beantrage einen API Schl\u00fcssel](https://developer.casambi.com/#documentation) bei Casambi.",
+        "title": "Casambi Netzwerk-Login",
+        "description": "Verwende denselben API-Schlüssel, dieselbe E-Mail und dasselbe Netzwerk-Passwort wie das Homebridge-Plugin im Netzwerk-Login. Das Netzwerk braucht ein aktives Gateway.",
         "data": {
-          "api_key": "API-Schl\u00fcssel"
-        }
-      },
-      "site_user": {
-        "title": "Casambi",
-        "description": "[Erstelle eine 'Site'](https://support.casambi.com/support/solutions/articles/12000041325-how-to-create-a-site) und gib hier die Zugangsdaten für den Site Benutzer an.",
-        "data": {
-          "email": "Email",
-          "user_password": "Benutzer Passwort"
-        }
-      },
-      "network": {
-        "title": "Casambi",
-        "description": "[Konfiguriere ein Gateway](https://support.casambi.com/support/solutions/articles/12000017046-how-to-enable-a-gateway-for-a-network) für dein Netzwerk und gib hier das Netzwerk Passwort an.",
-        "data": {
-          "network_password": "Netzwerk Passwort"
+          "api_key": "API-Schlüssel",
+          "email": "E-Mail",
+          "network_password": "Netzwerk-Passwort"
         }
       }
     },
     "error": {
-      "auth_user_password":"Ung\u00fcltiges Benutzer Passwort",
-      "auth_network_password":"Ung\u00fcltiges Netzwerk Passwort"
+      "invalid_auth": "Casambi hat API-Schlüssel, E-Mail oder Netzwerk-Passwort abgelehnt",
+      "cannot_connect": "Die Casambi-Cloud ist nicht erreichbar"
     }
   },
   "issues": {

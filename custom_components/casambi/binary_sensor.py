@@ -29,7 +29,7 @@ async def async_setup_entry(
     """
     Setting up binary sensor
     """
-    _LOGGER.debug(f"Setting up binary sensor entities. config_entry:{config_entry}")
+    _LOGGER.debug("Setting up binary sensor entities")
 
     controller = hass.data[DOMAIN][CONF_CONTROLLER]
 

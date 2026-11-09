@@ -8,8 +8,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import async_create_issue, IssueSeverity
 
-import async_timeout
-
 from .utils import async_create_controller, async_create_coordinator
 
 from .const import DOMAIN, CONF_CONTROLLER, CONF_COORDINATOR, MAX_START_UP_TIME
@@ -51,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     #    async_create_controller, hass, config
     # )
     try:
-        with async_timeout.timeout(MAX_START_UP_TIME):
+        async with asyncio.timeout(MAX_START_UP_TIME):
             controller = hass.data[DOMAIN][CONF_CONTROLLER] = (
                 await async_create_controller(hass, config)
             )
@@ -60,9 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         err_msg = "Error connecting to the Casambi, "
         err_msg += "caught asyncio.TimeoutError"
         _LOGGER.error(err_msg)
-        return None
+        hass.data[DOMAIN].pop(CONF_CONTROLLER, None)
+        return False
 
     if not controller:
+        hass.data[DOMAIN].pop(CONF_CONTROLLER, None)
         return False
 
     hass.data[DOMAIN][CONF_COORDINATOR] = await hass.async_add_executor_job(
@@ -124,8 +124,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 async def async_setup(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the GitHub Custom component from yaml configuration."""
-
-    _LOGGER.debug(f"async_setup config_entry: {config_entry}")
 
     hass.data.setdefault(DOMAIN, {})
 

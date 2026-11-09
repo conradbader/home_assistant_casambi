@@ -9,7 +9,7 @@ from typing import Any, Optional
 from homeassistant.components.light import (
     LightEntity,
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
 )
@@ -74,49 +74,22 @@ class CasambiLightEntity(CoordinatorEntity, LightEntity, CasambiEntity):
         return self._distribution
 
     @property
-    def min_mireds(self) -> int:
-        """
-        Return the coldest color_temp that this light supports.
-
-        M = 1000000 / T
-
-        25000 K, has a mired value of M = 40 mireds
-        1000000 / 25000 = 40
-        """
-        return self.unit.get_min_mired()
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color temperature this light supports."""
+        return self.unit.get_supported_color_temperature()[0]
 
     @property
-    def max_mireds(self) -> int:
-        """
-        Return the warmest color_temp that this light supports.
-
-        M = 1000000 / T
-
-        25000 K, has a mired value of M = 40 mireds
-        1000000 / 25000 = 40
-
-        {
-            'Dimmer': {
-                'type': 'Dimmer',
-                'value': 0.0
-                },
-            'CCT': {
-                'min': 2200,
-                'max': 6000,
-                'level': 0.4631578947368421,
-                'type': 'CCT',
-                'value': 3960.0
-                }
-        }
-        """
-        return self.unit.get_max_mired()
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color temperature this light supports."""
+        return self.unit.get_supported_color_temperature()[1]
 
     @property
-    def color_temp(self) -> int:
-        """
-        Return the CT color value in mireds.
-        """
-        return self.unit.get_color_temp()
+    def color_temp_kelvin(self) -> int | None:
+        """Return the current color temperature in Kelvin."""
+        if not self.unit.supports_color_temperature():
+            return None
+        current = self.unit.get_supported_color_temperature()[2]
+        return round(current) if current else None
 
     @property
     def rgb_color(self):
@@ -229,19 +202,19 @@ class CasambiLightEntity(CoordinatorEntity, LightEntity, CasambiEntity):
         brightness = 255
         distribution = 255
 
-        if ATTR_COLOR_TEMP in kwargs:
-            dbg_msg = "async_turn_on: ATTR_COLOR_TEMP:"
-            dbg_msg += f" {kwargs[ATTR_COLOR_TEMP]}"
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            dbg_msg = "async_turn_on: ATTR_COLOR_TEMP_KELVIN:"
+            dbg_msg += f" {kwargs[ATTR_COLOR_TEMP_KELVIN]}"
             _LOGGER.debug(dbg_msg)
 
-            color_temp = kwargs[ATTR_COLOR_TEMP]
+            color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
             dbg_msg = "async_turn_on:"
             dbg_msg += f"setting unit color name={self.name}"
             dbg_msg += f" color_temp={color_temp}"
             _LOGGER.debug(dbg_msg)
 
-            await self.unit.set_unit_color_temperature(value=color_temp, source="mired")
+            await self.unit.set_unit_color_temperature(value=color_temp, source="kelvin")
 
             return
 

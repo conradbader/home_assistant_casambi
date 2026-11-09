@@ -70,6 +70,11 @@ async def async_create_controller(
     if CONF_NETWORK_TIMEOUT in config:
         network_timeout = config[CONF_NETWORK_TIMEOUT]
 
+    # The library prefers the account login whenever it gets a user password.
+    # The network login is all this integration needs, so it wins if present.
+    if network_password:
+        user_password = None
+
     if not user_password and not network_password:
         err_msg = f"{CONF_USER_PASSWORD} or {CONF_NETWORK_PASSWORD} "
         err_msg += "must be set in config!"
@@ -126,9 +131,7 @@ async def async_create_coordinator(
     if CONF_SCAN_INTERVAL in config:
         scan_interval = config[CONF_SCAN_INTERVAL]
 
-    _LOGGER.debug(
-        f"Creating coordinator with scan_interval: {scan_interval} hass: {hass} config: {config} controller: {controller}"
-    )
+    _LOGGER.debug("Creating coordinator with scan_interval: %s", scan_interval)
 
     coordinator = DataUpdateCoordinator(
         hass,
