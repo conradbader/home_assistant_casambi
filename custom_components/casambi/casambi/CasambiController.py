@@ -54,10 +54,7 @@ class CasambiController:
             return
 
         try:
-            await self._hass.async_add_executor_job(
-                self._aiocasambi_controller.get_network_state
-            )
-            # await self._aiocasambi_controller.get_network_state()
+            await self._aiocasambi_controller.get_network_state()
         except aiocasambi.Unauthorized:
             # Need to reconnect, session is invalid
             await self.async_reconnect()
@@ -84,7 +81,10 @@ class CasambiController:
             _LOGGER.debug(msg)
 
             # Try again to reconnect
-            self._hass.loop.call_later(self._network_retry_timer, self.async_reconnect)
+            self._hass.loop.call_later(
+                self._network_retry_timer,
+                lambda: self._hass.async_create_task(self.async_reconnect()),
+            )
 
     def update_light_state(self, unit_unique_id):
         """

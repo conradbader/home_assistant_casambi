@@ -126,18 +126,20 @@ class CasambiLightEntity(CoordinatorEntity, LightEntity, CasambiEntity):
         """
         Flag supported color_modes (in an array format).
         """
-        supports = []
-
-        if self.unit.supports_brightness():
-            supports.append(ColorMode.BRIGHTNESS)
+        supports = set()
 
         if self.unit.supports_color_temperature():
-            supports.append(ColorMode.COLOR_TEMP)
+            supports.add(ColorMode.COLOR_TEMP)
 
         if self.unit.supports_rgbw():
-            supports.append(ColorMode.RGBW)
+            supports.add(ColorMode.RGBW)
         elif self.unit.supports_rgb():
-            supports.append(ColorMode.RGB)
+            supports.add(ColorMode.RGB)
+
+        # Home Assistant only accepts BRIGHTNESS as the sole color mode.
+        # All the other modes already include brightness.
+        if not supports and self.unit.supports_brightness():
+            supports.add(ColorMode.BRIGHTNESS)
 
         return supports
 
@@ -167,26 +169,20 @@ class CasambiLightEntity(CoordinatorEntity, LightEntity, CasambiEntity):
         dbg_msg += f'"{online}" for unit {self}'
         _LOGGER.debug(dbg_msg)
 
-        if self.enabled:
-            # Device needs to be enabled for us to schedule updates
-            self.async_schedule_update_ha_state(True)
+        self.schedule_state_update()
 
     def update_state(self):
         """
         Update units state
         """
-        if self.enabled:
-            # Device needs to be enabled for us to schedule updates
-            _LOGGER.debug(f"update_state {self}")
-            self.async_schedule_update_ha_state(True)
+        _LOGGER.debug(f"update_state {self}")
+        self.schedule_state_update()
 
     def process_update(self, data):
         """Process callback message, update home assistant light state"""
         _LOGGER.debug(f"process_update: self: {self} data: {data}")
 
-        if self.enabled:
-            # Device needs to be enabled for us to schedule updates
-            self.async_schedule_update_ha_state(True)
+        self.schedule_state_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """

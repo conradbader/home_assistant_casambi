@@ -36,18 +36,14 @@ class CasambiStatusBinarySensorEntity(CasambiBinarySensorEntity):
 
     def update_state(self):
         """Update units state"""
-        if self.enabled:
-            # Device needs to be enabled for us to schedule updates
-            _LOGGER.debug(f"update_state {self}")
-            self.async_schedule_update_ha_state(True)
+        _LOGGER.debug(f"update_state {self}")
+        self.schedule_state_update()
 
     def process_update(self, data):
         """Process callback message, update home assistant light state"""
         _LOGGER.debug(f"process_update: self: {self} data: {data}")
-        if self.enabled:
-            if self._unit_unique_id in data:
-                # Device needs to be enabled for us to schedule updates
-                self.async_schedule_update_ha_state(True)
+        if self._unit_unique_id in data:
+            self.schedule_state_update()
 
     def __repr__(self) -> str:
         """Return the representation."""

@@ -47,7 +47,6 @@ class CasambiEntity(Entity):
             name=self.unit.name,
             model=self.unit.fixture_model,
             sw_version=self.unit.firmware_version,
-            via_device=(DOMAIN, self.unit.network_id),
         )
 
         _LOGGER.debug(f"device_info called returning: {device_info} unit: {self.unit}")
@@ -62,6 +61,11 @@ class CasambiEntity(Entity):
         _LOGGER.debug(f"available is returning {_available} for unit={self.unit}")
 
         return _available
+
+    def schedule_state_update(self) -> None:
+        """Refresh the state, unless Home Assistant never accepted the entity."""
+        if self.enabled and self.hass and self.entity_id:
+            self.async_schedule_update_ha_state(True)
 
     @property
     def should_poll(self):
